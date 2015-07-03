@@ -5,7 +5,7 @@ public class Cliente extends Pessoa{
 	private float totalDespesasCreditos;
 	private float taxaEsforco;
 	private Cliente fiador;
-	
+	private boolean seguroVida;
 	
 	public Cliente(String nome, int idade, boolean historicoIncumprimento,
 			float ordenado, float totalDespesasCreditos, float taxaEsforco,
@@ -15,6 +15,13 @@ public class Cliente extends Pessoa{
 		this.totalDespesasCreditos = totalDespesasCreditos;
 		this.taxaEsforco = taxaEsforco;
 		this.fiador = fiador;
+		this.seguroVida = false;
+	}
+	public boolean isSeguroVida() {
+		return seguroVida;
+	}
+	public void setSeguroVida(boolean seguroVida) {
+		this.seguroVida = seguroVida;
 	}
 	public float getTaxaEsforco() {
 		return taxaEsforco;
