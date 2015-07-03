@@ -220,7 +220,7 @@ public class Simulador {
 		 x.setOrdenado(sc.nextFloat());
 		 System.out.println("Total de despesas em créditos:");
 		 x.setTotalDespesasCreditos(sc.nextFloat());
-		 System.out.println("Seguro Vida (S/N)");
+		 System.out.println("Tem Seguro Vida (S/N)");
 		 String seguro = sc.next();
 		 if(seguro.equalsIgnoreCase("S")) {
 			 x.setSeguroVida(true);
