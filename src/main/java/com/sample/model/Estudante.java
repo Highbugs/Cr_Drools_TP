@@ -49,5 +49,12 @@ public class Estudante extends Pessoa {
 	public void setMatriculadoUniversidade(boolean matriculadoUniversidade) {
 		this.matriculadoUniversidade = matriculadoUniversidade;
 	}
-
+	public String toString() {
+		String returnString = "";
+		returnString+="Estudante "+this.getNome()+" encontrase no "+this.getAnoEscolaridade()+"º matricula";
+		returnString+="\n e tem "+this.getIdade()+" anos e uma média de "+this.getMediaCurso()+" valores";
+		returnString+="\n O seu Fiador é : ";
+		returnString+=""+fiador;
+		return returnString;
+	}
 }

@@ -41,5 +41,17 @@ public class Cliente extends Pessoa{
 	public void setTotalDespesasCreditos(float totalDespesasCreditos) {
 		this.totalDespesasCreditos = totalDespesasCreditos;
 	}
-	
+	public String toString (){
+		String returnString = "";
+		returnString+="A pessoa "+this.getNome();
+		returnString+=" tem "+this.getIdade()+" anos";
+		returnString+=" ordenado "+this.getOrdenado()+"€";
+		returnString+=" despesas em crédito de  "+this.getTotalDespesasCreditos()+"€";
+		if(this.isHistoricoIncumprimento()) {
+			returnString+=" e histórico de incumprimento";
+		} else {
+			returnString+=" e não tem histórico de incumprimento";
+		}
+		return returnString;
+	}
 }
