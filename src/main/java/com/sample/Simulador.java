@@ -1,5 +1,18 @@
 package com.sample;
 
+import org.drools.KnowledgeBase;
+import org.drools.KnowledgeBaseFactory;
+import org.drools.builder.KnowledgeBuilder;
+import org.drools.builder.KnowledgeBuilderError;
+import org.drools.builder.KnowledgeBuilderErrors;
+import org.drools.builder.KnowledgeBuilderFactory;
+import org.drools.builder.ResourceType;
+import org.drools.io.ResourceFactory;
+import org.drools.logger.KnowledgeRuntimeLogger;
+import org.drools.logger.KnowledgeRuntimeLoggerFactory;
+import org.drools.runtime.StatefulKnowledgeSession;
+
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import com.sample.model.*;
@@ -12,6 +25,7 @@ public class Simulador {
 			Cliente clientePessoal = getInformacaoCliente("############################# Dados Cliente #################");
 			CreditoPessoal creditoPessoal = getCreditoPessoal();
 			creditoPessoal.setCliente(clientePessoal);
+			startTests(creditoPessoal,new Simulador());
 			break;
 		case 2:
 			Cliente clienteAutomovel = getInformacaoCliente("############################# Dados Cliente #################");
@@ -31,6 +45,35 @@ public class Simulador {
 			break;
 		}
 	 }
+	 private static void startTests(Credito credito, Simulador simulador) {
+		 try {
+           // load up the knowledge base
+           KnowledgeBase kbase = readKnowledgeBase();
+           StatefulKnowledgeSession ksession = kbase.newStatefulKnowledgeSession();
+           KnowledgeRuntimeLogger logger = KnowledgeRuntimeLoggerFactory.newFileLogger(ksession, "test");
+           // go !
+           ksession.insert(credito);
+           ksession.insert(simulador);
+           ksession.fireAllRules();
+           logger.close();
+       } catch (Throwable t) {
+           t.printStackTrace();
+       }
+	 }
+ 	 private static KnowledgeBase readKnowledgeBase() throws Exception {
+       KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
+       kbuilder.add(ResourceFactory.newClassPathResource("Sample.drl"), ResourceType.DRL);
+       KnowledgeBuilderErrors errors = kbuilder.getErrors();
+       if (errors.size() > 0) {
+           for (KnowledgeBuilderError error: errors) {
+               System.err.println(error);
+           }
+           throw new IllegalArgumentException("Could not parse knowledge.");
+       }
+       KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
+       kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+       return kbase;
+   }
 	 public static CreditoHabitacao getCreditoHabitacao() {
 		 Scanner sc = new Scanner(System.in);
 		 CreditoHabitacao credito = new CreditoHabitacao(null,0,0,null,0,0,0,0,0,false,false,false);
@@ -257,6 +300,20 @@ public class Simulador {
 			 x.setHistoricoIncumprimento(true);
 		 } else {
 			 x.setHistoricoIncumprimento(false);
+		 }
+		 System.out.println("Tem Conta Bancária ?(S/N)");
+		 String conta = sc.nextLine(); 
+		 if(conta.equalsIgnoreCase("S")) {
+			 x.setContaBancaria(true);
+		 } else {
+			 x.setContaBancaria(false);
+		 }
+		 System.out.println("Tem Empreso a mais de 3 meses?(S/N)");
+		 String emprego = sc.nextLine(); 
+		 if(emprego.equalsIgnoreCase("S")) {
+			 x.setEmprego(true);
+		 } else {
+			 x.setEmprego(false);
 		 }
 		 System.out.println("##########################################################");
 		 return x;

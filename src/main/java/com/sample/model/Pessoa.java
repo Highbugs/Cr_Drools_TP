@@ -4,8 +4,15 @@ public class Pessoa {
 	private String nome;
 	private int idade;
 	private boolean historicoIncumprimento;
+	private boolean contaBancaria;
 	public String getNome() {
 		return nome;
+	}
+	public boolean isContaBancaria() {
+		return contaBancaria;
+	}
+	public void setContaBancaria(boolean contaBancaria) {
+		this.contaBancaria = contaBancaria;
 	}
 	public void setNome(String nome) {
 		this.nome = nome;

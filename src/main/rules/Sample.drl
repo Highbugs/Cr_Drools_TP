@@ -1,20 +1,56 @@
 package com.sample
- 
-import com.sample.DroolsTest.Message;
- 
-rule "Hello World"
-    when
-        m : Message( status == Message.HELLO, myMessage : message )
-    then
-        System.out.println( myMessage );
-        m.setMessage( "Goodbye cruel world" );
-        m.setStatus( Message.GOODBYE );
-        update( m );
-end
 
-rule "GoodBye"
-    when
-        Message( status == Message.GOODBYE, myMessage : message )
-    then
-        System.out.println( myMessage );
+import com.sample.Simulador;
+import com.sample.model.*;
+import java.util.Scanner;
+
+rule "Cliente com histórico de divida"
+	salience 100
+	when
+		$credito:Credito(cliente.isHistoricoIncumprimento() == true)
+	then
+		System.out.println("Crédito reprovado - Histórico de incumprimento");
+end 
+rule "Cliente sem idade"
+	salience 100
+	when
+		$credito:Credito(cliente.getIdade()<18 ||cliente.getIdade()>75)
+	then
+		System.out.println("Crédito reprovado - cliente com idade errada");
+end 
+rule "Cliente Sem Conta Bancária"
+	salience 100
+	when
+		$credito:Credito(cliente.isContaBancaria() == false)
+	then
+		System.out.println("Crédito reprovado - cliente sem conta bancária");
+end 
+rule "Cliente sem emprego estável"
+	salience 100
+	when
+		$credito:Credito(cliente.isEmprego() == false)
+	then
+		System.out.println("Crédito reprovado - cliente sem emprego estável");
+end
+rule "Cliente com taxa de esforço elevada"
+	salience 99
+	when
+		$simulador:Simulador()
+		$credito:Credito(fiador == null && getTaxaEsforcoCliente() > 35)
+	then
+		Scanner sc = new Scanner(System.in);
+		System.out.println("Crédito reprovado - taxa de esforço muito elevada");
+		System.out.println("Pretende usar um fiador?(S/N)");
+		String op = sc.nextLine();
+		if (op.equalsIgnoreCase("S")) {
+			$credito.setFiador($simulador.getInformacaoCliente("###########Informação Fiador"));
+			update($credito);
+		}	
+end
+rule "Taxa de esforço cliente e fiador elevada"
+	salience 100
+	when
+		$credito:Credito(fiador != null && getTaxaEsforcoFiadorCliente() > 35)
+	then
+		System.out.println("Crédito reprovado -> Taxa de esfprço fiador+cliente muito elevado");
 end
