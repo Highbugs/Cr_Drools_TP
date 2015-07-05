@@ -4,13 +4,13 @@ public class Cliente extends Pessoa{
 	private float ordenado;
 	private float totalDespesasCreditos;
 	private float taxaEsforco;
-	private Cliente fiador;
+	private Fiador fiador;
 	private boolean seguroVida;
 	private boolean emprego;
 	
 	public Cliente(String nome, int idade, boolean historicoIncumprimento,
 			float ordenado, float totalDespesasCreditos, float taxaEsforco,
-			Cliente fiador) {
+			Fiador fiador) {
 		super(nome, idade, historicoIncumprimento);
 		this.ordenado = ordenado;
 		this.totalDespesasCreditos = totalDespesasCreditos;
@@ -43,10 +43,10 @@ public class Cliente extends Pessoa{
 		this.ordenado = ordenado;
 	}
 
-	public Cliente getFiador() {
+	public Fiador getFiador() {
 		return fiador;
 	}
-	public void setFiador(Cliente fiador) {
+	public void setFiador(Fiador fiador) {
 		this.fiador = fiador;
 	}
 	public float getTotalDespesasCreditos() {

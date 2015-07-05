@@ -15,10 +15,12 @@ import org.drools.runtime.StatefulKnowledgeSession;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import com.UI.UIMainWindow;
 import com.sample.model.*;
-
+import com.UI.*;
 public class Simulador {
 	 public static final void main(String[] args) {
+		 UIMainWindow mainFrame = new UIMainWindow();
 		 Scanner sc = new Scanner(System.in);
 		System.out.println("Welcome to Simulator|Irá ser em parte gráfica|");
 		switch(getOpcao()) {
