@@ -121,7 +121,7 @@ rule "Verifica taxa de esforco"
 		$reprovado:Reprovado(checkTaxaEsforco == false)
 		$credito:Credito(taxaEsforco > 35)  
 	then
-		$reprovado.addMotivo("\nCrédito negado -> Taxa de esforço "+$credito.getTaxaEsforco());
+		$reprovado.addMotivo("\nTaxa de esforço "+$credito.getTaxaEsforco());
 		$reprovado.setCheckTaxaEsforco(true);
 		update($reprovado);
 end
@@ -255,4 +255,30 @@ rule "Calcula Mensalidades"
 		$credito.setMensalidade(mensalidade);
 		System.out.println("Mensalidade -> "+mensalidade);
 		update($credito);
+end
+rule "Apresenta juros fixo"
+	salience 80
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:Credito(tipoJuros == "Fixo")
+	then
+		String resultado = "";
+		resultado+="\nJuros -> "+$credito.getTaxaFixa();
+		resultado+="\n Total a Pagar -> "+$credito.getTotalPagar();
+		resultado+="\n Mensalidades -> "+$credito.getMensalidade();
+		ResultPopUp myResult = new ResultPopUp();
+		myResult.infoBox(resultado,"Aprovado");
+end
+rule "Apresenta juros variavel"
+	salience 80
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:Credito(tipoJuros == "Variavel")
+	then
+		String resultado = "";
+		resultado+="\nJuros -> "+$credito.getTAN();
+		resultado+="\n Total a Pagar -> "+$credito.getTotalPagar();
+		resultado+="\n Mensalidades -> "+$credito.getMensalidade();
+		ResultPopUp myResult = new ResultPopUp();
+		myResult.infoBox(resultado,"Aprovado");
 end

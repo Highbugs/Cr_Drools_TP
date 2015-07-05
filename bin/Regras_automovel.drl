@@ -11,7 +11,7 @@ rule "Cliente com histórico de divida"
 		$reprovado:Reprovado(checkDivida == false)
 		$cliente:Cliente(isHistoricoIncumprimento() == true)
 	then
-		$reprovado.addMotivo("\nCrédito reprovado - Cliente Histórico de incumprimento");
+		$reprovado.addMotivo("\nCliente Histórico de incumprimento");
 		$reprovado.setCheckDivida(true);
 		update($reprovado);
 end 
@@ -21,7 +21,7 @@ rule "Cliente sem idade"
 		$reprovado:Reprovado(checkIdade == false)
 		$cliente:Cliente(getIdade()<18 ||getIdade()>75)
 	then
-		$reprovado.addMotivo("\nCrédito reprovado - cliente com idade errada");
+		$reprovado.addMotivo("\nCliente com idade errada");
 		$reprovado.setCheckIdade(true);
 		update($reprovado);
 end 
@@ -31,7 +31,7 @@ rule "Cliente Sem Conta Bancária"
 		$reprovado:Reprovado(checkContaBancaria == false)
 		$cliente:Cliente(isContaBancaria() == false)
 	then
-		$reprovado.addMotivo("\nCrédito reprovado - cliente sem conta bancária");
+		$reprovado.addMotivo("\nCliente sem conta bancária");
 		$reprovado.setCheckContaBancaria(true);
 		update($reprovado);
 end 
@@ -41,7 +41,7 @@ rule "Cliente sem emprego estável"
 		$reprovado:Reprovado(checkEmprego == false)
 		$cliente:Cliente(isEmprego() == false)
 	then
-		$reprovado.addMotivo("\nCrédito reprovado - cliente sem emprego estável");
+		$reprovado.addMotivo("\nCliente sem emprego estável");
 		$reprovado.setCheckEmprego(true);
 		update($reprovado);
 end
@@ -52,7 +52,7 @@ rule "Fiador com histórico de divida"
 		$fiador:Fiador(isHistoricoIncumprimento() == true)
 		$reprovado:Reprovado(checkDividaFiador == false)
 	then
-		$reprovado.addMotivo("\nCrédito reprovado -Fiador Histórico de incumprimento");
+		$reprovado.addMotivo("\nFiador Histórico de incumprimento");
 		$reprovado.setCheckDividaFiador(true);
 		update($reprovado);
 end 
@@ -63,7 +63,7 @@ rule "Fiador sem idade"
 		$reprovado:Reprovado(checkIdadeFiador == false)
 		$fiador:Fiador(getIdade()<18 ||getIdade()>75)
 	then
-		$reprovado.addMotivo("\nCrédito reprovado - Fiador com idade errada");
+		$reprovado.addMotivo("\nFiador com idade errada");
 		$reprovado.setCheckIdadeFiador(true);
 		update($reprovado);
 end 
@@ -74,7 +74,7 @@ rule "Fiador Sem Conta Bancária"
 		$reprovado:Reprovado(checkContaBancariaFiador == false)
 		$fiador:Fiador(isContaBancaria() == false)
 	then
-		$reprovado.addMotivo("\nCrédito reprovado - Fiador sem conta bancária");
+		$reprovado.addMotivo("\nFiador sem conta bancária");
 		$reprovado.setCheckContaBancariaFiador(true);
 		update($reprovado);
 end 
@@ -85,7 +85,7 @@ rule "Fiador sem emprego estável"
 		$reprovado:Reprovado(checkEmpregoFiador == false)
 		$fiador:Fiador(isEmprego() == false)
 	then
-		$reprovado.addMotivo("\nCrédito reprovado - Fiador sem emprego estável");
+		$reprovado.addMotivo("\nFiador sem emprego estável");
 		$reprovado.setCheckEmpregoFiador(true);
 		update($reprovado);
 end
@@ -122,7 +122,7 @@ rule "Verifica taxa de esforco"
 		$reprovado:Reprovado(checkTaxaEsforco == false)
 		$credito:Credito(taxaEsforco > 35)  
 	then
-		$reprovado.addMotivo("\nCrédito negado -> Taxa de esforço "+$credito.getTaxaEsforco());
+		$reprovado.addMotivo("\nTaxa de esforço "+$credito.getTaxaEsforco());
 		$reprovado.setCheckTaxaEsforco(true);
 		update($reprovado);
 end
@@ -132,7 +132,8 @@ rule "Verifica Reprovado"
 	when
 		$reprovado:Reprovado(getNumberMotivos() > 0)
 	then
-		System.out.println(""+$reprovado);
+		ResultPopUp myResult = new ResultPopUp();
+		myResult.infoBox(""+$reprovado,"Reprovado");
 end
 
 rule "Verifica Produto Financeiro"
@@ -264,4 +265,30 @@ rule "Calcula Mensalidades"
 		$credito.setMensalidade(mensalidade);
 		System.out.println("Mensalidade -> "+mensalidade);
 		update($credito);
+end
+rule "Apresenta juros fixo"
+	salience 80
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:Credito(tipoJuros == "Fixo")
+	then
+		String resultado = "";
+		resultado+="\nJuros -> "+$credito.getTaxaFixa();
+		resultado+="\n Total a Pagar -> "+$credito.getTotalPagar();
+		resultado+="\n Mensalidades -> "+$credito.getMensalidade();
+		ResultPopUp myResult = new ResultPopUp();
+		myResult.infoBox(resultado,"Aprovado");
+end
+rule "Apresenta juros variavel"
+	salience 80
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:Credito(tipoJuros == "Variavel")
+	then
+		String resultado = "";
+		resultado+="\nJuros -> "+$credito.getTAN();
+		resultado+="\n Total a Pagar -> "+$credito.getTotalPagar();
+		resultado+="\n Mensalidades -> "+$credito.getMensalidade();
+		ResultPopUp myResult = new ResultPopUp();
+		myResult.infoBox(resultado,"Aprovado");
 end
