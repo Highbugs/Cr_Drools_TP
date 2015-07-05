@@ -14,6 +14,34 @@ public class Reprovado {
 	private boolean checkContaBancariaFiador;
 	private boolean checkEmpregoFiador;
 	private boolean checkTaxaEsforcoFiador;
+	private boolean checkSeguroVida;
+	private boolean checkValorHabitacao;
+	private boolean checkTempoAmortizacao;
+	
+	public boolean isCheckTempoAmortizacao() {
+		return checkTempoAmortizacao;
+	}
+
+	public void setCheckTempoAmortizacao(boolean checkTempoAmortizacao) {
+		this.checkTempoAmortizacao = checkTempoAmortizacao;
+	}
+
+	public boolean isCheckValorHabitacao() {
+		return checkValorHabitacao;
+	}
+
+	public void setCheckValorHabitacao(boolean checkValorHabitacao) {
+		this.checkValorHabitacao = checkValorHabitacao;
+	}
+
+	public boolean isCheckSeguroVida() {
+		return checkSeguroVida;
+	}
+
+	public void setCheckSeguroVida(boolean checkSeguroVida) {
+		this.checkSeguroVida = checkSeguroVida;
+	}
+
 	public boolean isCheckDivida() {
 		return checkDivida;
 	}

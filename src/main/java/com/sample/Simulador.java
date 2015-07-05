@@ -53,9 +53,19 @@ public class Simulador {
 			startTestsAutomovel(creditoautomovel,new Simulador(),fiadorAuto);
 			break;
 		case 3:
+			Fiador fiadorHabit = new Fiador();
 			Cliente clienteHabitacao = getInformacaoClienteHabitacao();
-			CreditoHabitacao creditoHabitacao = getCreditoHabitacao();
+			System.out.println("Tem fiador?(S/N)");
+			 String fiadorOpHabit = sc.nextLine(); 
+			 if(fiadorOpHabit.equalsIgnoreCase("S")) {
+				 fiadorHabit = getInformacaoFiador();
+			 } else {
+				 fiadorHabit = null;
+			 }
+			CreditoHabitacao creditoHabitacao = getCreditoHabitacao(clienteHabitacao);
 			creditoHabitacao.setCliente(clienteHabitacao);
+			
+			startTestsHabitacao(creditoHabitacao, new Simulador(), fiadorHabit);
 			break;
 		case 4:
 			Estudante estudante = getInformacaoEstudante();
@@ -84,6 +94,25 @@ public class Simulador {
 	           t.printStackTrace();
 	       }
 		 }
+	 private static void startTestsHabitacao(Credito credito, Simulador simulador, Fiador fiador) {
+		 try {
+           // load up the knowledge base
+           KnowledgeBase kbase = readKnowledgeBaseHabitacao();
+           StatefulKnowledgeSession ksession = kbase.newStatefulKnowledgeSession();
+           KnowledgeRuntimeLogger logger = KnowledgeRuntimeLoggerFactory.newFileLogger(ksession, "test");
+           // go !
+           ksession.insert(credito);
+           ksession.insert(credito.getCliente());
+           ksession.insert(new Reprovado());
+           if(fiador != null) {
+               ksession.insert(fiador);
+           }
+           ksession.fireAllRules();
+           logger.close();
+       } catch (Throwable t) {
+           t.printStackTrace();
+       }
+	 }
 	 private static void startTestsPessoal(Credito credito, Simulador simulador, Fiador fiador) {
 		 try {
            // load up the knowledge base
@@ -103,6 +132,20 @@ public class Simulador {
            t.printStackTrace();
        }
 	 }
+	 private static KnowledgeBase readKnowledgeBaseHabitacao() throws Exception {
+	       KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
+	       kbuilder.add(ResourceFactory.newClassPathResource("Regras_habitacao.drl"), ResourceType.DRL);
+	       KnowledgeBuilderErrors errors = kbuilder.getErrors();
+	       if (errors.size() > 0) {
+	           for (KnowledgeBuilderError error: errors) {
+	               System.err.println(error);
+	           }
+	           throw new IllegalArgumentException("Could not parse knowledge.");
+	       }
+	       KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
+	       kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+	       return kbase;
+	   }
 	 private static KnowledgeBase readKnowledgeBaseAutomovel() throws Exception {
 	       KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
 	       kbuilder.add(ResourceFactory.newClassPathResource("Regras_automovel.drl"), ResourceType.DRL);
@@ -131,7 +174,7 @@ public class Simulador {
        kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
        return kbase;
    }
-	 public static CreditoHabitacao getCreditoHabitacao() {
+	 public static CreditoHabitacao getCreditoHabitacao(Cliente cliente) {
 		 Scanner sc = new Scanner(System.in);
 		 CreditoHabitacao credito = new CreditoHabitacao(null,0,0,null,0,0,0,0,0,false,false,false);
 		 System.out.println("########### Dados Crédito ####################");
@@ -139,10 +182,12 @@ public class Simulador {
 		 credito.setMontanteEscolhido(sc.nextFloat());
 		 System.out.println("Prazo Amortização(meses)");
 		 credito.setPrazoAmortizacao(sc.nextInt());
+		 System.out.println("Valor Imovel");
+		 credito.setValorImovel(sc.nextFloat());
 		 System.out.println("Taxa de Juro -> Fixa(F)/Variavel Euribor a 6 meses(V)");
 		 String tipoTaxa = sc.next();
 		 if(tipoTaxa.equalsIgnoreCase("F")) {
-			 credito.setTipoJuros("Fixa");
+			 credito.setTipoJuros("Fixo");
 		 } else {
 			 credito.setTipoJuros("Variavel");
 		 }
@@ -153,6 +198,16 @@ public class Simulador {
 		 } else {
 			 credito.setSeguroCredito(false);
 		 }
+		 if(!cliente.isSeguroVida()) {
+			 System.out.println("Seguro Vida (S/N)");
+			 seguro = sc.next();
+			 if(seguro.equalsIgnoreCase("S")) {
+				 credito.setSeguroVida(true);
+				 cliente.setSeguroVida(true);
+			 } else {
+				 credito.setSeguroVida(false);
+			 }
+		 }
 		 System.out.println("Investir Produto Finaceiro (S/N)");
 		 seguro = sc.next();
 		 if(seguro.equalsIgnoreCase("S")) {
@@ -161,6 +216,7 @@ public class Simulador {
 			 credito.setProdutofinanceiro(false);
 		 }
 		 System.out.println("##############################################");
+		 
 		 return credito;
 		 
 	 }
@@ -334,6 +390,20 @@ public class Simulador {
 			 x.setHistoricoIncumprimento(true);
 		 } else {
 			 x.setHistoricoIncumprimento(false);
+		 }
+		 System.out.println("Tem Conta Bancária ?(S/N)");
+		 String conta = sc.nextLine(); 
+		 if(conta.equalsIgnoreCase("S")) {
+			 x.setContaBancaria(true);
+		 } else {
+			 x.setContaBancaria(false);
+		 }
+		 System.out.println("Tem Empreso a mais de 3 meses?(S/N)");
+		 String emprego = sc.nextLine(); 
+		 if(emprego.equalsIgnoreCase("S")) {
+			 x.setEmprego(true);
+		 } else {
+			 x.setEmprego(false);
 		 }
 		 System.out.println("##########################################################");
 		 return x;
