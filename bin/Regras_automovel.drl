@@ -4,6 +4,7 @@ import com.sample.Simulador;
 import com.sample.model.*;
 import java.util.Scanner;
 import java.math.*;
+
 rule "Cliente com histórico de divida"
 	salience 100
 	when
@@ -134,12 +135,11 @@ rule "Verifica Reprovado"
 		System.out.println(""+$reprovado);
 end
 
-
-rule "Verifica Produto Financeiro Pessoal"
+rule "Verifica Produto Financeiro"
 	salience 94
 	when
 		$reprovado:Reprovado(getNumberMotivos() == 0)
-		$credito:CreditoPessoal(produtofinanceiro == true && produtofinanceiroValor >= 0)
+		$credito:CreditoAutomovel(produtofinanceiro == true && produtofinanceiroValor >= 0)
 	then
 		$credito.setProdutofinanceiroValor(-0.25f);
 		update($credito);
@@ -148,25 +148,34 @@ rule "Verifica Seguro Credito Pessoal"
 	salience 94
 	when
 		$reprovado:Reprovado(getNumberMotivos() == 0)
-		$credito:CreditoPessoal(seguroCredito == true && seguroCreditoValor >= 0)
+		$credito:CreditoAutomovel(seguroCredito == true && seguroCreditoValor >= 0)
 	then
 		$credito.setSeguroCreditoValor(-0.15f);
 		update($credito);
 end
-rule "Verifica Seguro Vida Pessoal"
+rule "Verifica Seguro Vida"
 	salience 94
 	when
 		$reprovado:Reprovado(getNumberMotivos() == 0)
-		$credito:CreditoPessoal(seguroVida == true && seguroVidaValor >= 0)
+		$credito:CreditoAutomovel(seguroVida == true && seguroVidaValor >= 0)
 	then
 		$credito.setSeguroVidaValor(-0.15f);
+		update($credito);
+end
+rule "Verifica Seguro do Carro" 
+	salience 94
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:CreditoAutomovel(seguroCarro == true && seguroCarroValor >= 0)
+	then
+		$credito.setSeguroCarroValor(-0.15f);
 		update($credito);
 end
 rule "Calcula Crédito Fixo Pessoal"
 	salience 93
 	when
 		$reprovado:Reprovado(getNumberMotivos() == 0)
-		$credito:CreditoPessoal(tipoJuros == "Fixo" && taxaFixa <= 0.0)
+		$credito:CreditoAutomovel(tipoJuros == "Fixo" && taxaFixa <= 0.0)
 	then
 		float minhaTaxa = 7.5f+($credito.getTaxaEsforco()*0.072f);
 		BigDecimal bd = new BigDecimal(Float.toString(minhaTaxa));
@@ -174,6 +183,7 @@ rule "Calcula Crédito Fixo Pessoal"
         minhaTaxa = bd.floatValue();
          System.out.println("Taxa sem seguros -> "+minhaTaxa);
         minhaTaxa += $credito.getSeguroVidaValor()+$credito.getProdutofinanceiroValor()+$credito.getSeguroCreditoValor();
+        minhaTaxa += $credito.getSeguroCarroValor();
         $credito.setTaxaFixa(minhaTaxa);
         System.out.println("Taxa fixa -> "+$credito.getTaxaFixa());
         update($credito)
@@ -182,14 +192,14 @@ rule "Calcula Crédito Variavel Pessoal"
 	salience 93
 	when
 		$reprovado:Reprovado(getNumberMotivos() == 0)
-		$credito:CreditoPessoal(tipoJuros == "Variavel" && TAN <= 0)
+		$credito:CreditoAutomovel(tipoJuros == "Variavel" && TAN <= 0)
 	then
 		float minhaTaxa = 2.0f+($credito.getTaxaEsforco()*0.0575f);
 		BigDecimal bd = new BigDecimal(Float.toString(minhaTaxa));
         bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
         System.out.println("Spread Nomral ->"+bd.floatValue());
         $credito.setEuribor(0.049f);
-        $credito.setSpread(bd.floatValue()+$credito.getSeguroVidaValor()+$credito.getSeguroCreditoValor()+$credito.getProdutofinanceiroValor());
+        $credito.setSpread(bd.floatValue()+$credito.getSeguroVidaValor()+$credito.getSeguroCreditoValor()+$credito.getProdutofinanceiroValor()+$credito.getSeguroCarroValor());
         System.out.println("Spread com seguros ->"+$credito.getSpread());
         $credito.setTAN($credito.getSpread()+$credito.getEuribor());
         System.out.println("TAN -> "+$credito.getTAN());
@@ -199,7 +209,7 @@ rule "Verificar limites credito fixa"
 	salience 92
 	when
 		$reprovado:Reprovado(getNumberMotivos() == 0)
-		$credito:CreditoPessoal(tipoJuros == "Fixo" && (taxaFixa < 7.5f || taxaFixa > 9.0f))
+		$credito:CreditoAutomovel(tipoJuros == "Fixo" && (taxaFixa < 7.5f || taxaFixa > 9.0f))
 	then
 		if($credito.getTaxaFixa() < 7.5f) {
 			$credito.setTaxaFixa(7.5f);
@@ -212,7 +222,7 @@ rule "Verificar limites credito variavel"
 	salience 92
 	when
 		$reprovado:Reprovado(getNumberMotivos() == 0)
-		$credito:CreditoPessoal(tipoJuros == "Variavel" && (TAN < 2.049f || TAN > 4.049f))
+		$credito:CreditoAutomovel(tipoJuros == "Variavel" && (TAN < 2.049f || TAN > 4.049f))
 	then
 		if($credito.getTAN() < 2.049f) {
 			$credito.setTAN(2.049f);
@@ -226,7 +236,7 @@ rule "Calcula Total a Pagar Taxa Fixa"
 	salience 91
 	when
 		$reprovado:Reprovado(getNumberMotivos() == 0)
-		$credito:CreditoPessoal(tipoJuros == "Fixo" && totalPagar <= 0)
+		$credito:CreditoAutomovel(tipoJuros == "Fixo" && totalPagar <= 0)
 	then
 		float jurosPagar = $credito.getMontanteEscolhido()*($credito.getTaxaFixa()/100);
 		$credito.setTotalPagar($credito.getMontanteEscolhido()+jurosPagar);
@@ -237,7 +247,7 @@ rule "Calcula Total a Pagar Taxa Variavel"
 	salience 91
 	when
 		$reprovado:Reprovado(getNumberMotivos() == 0)
-		$credito:CreditoPessoal(tipoJuros == "Variavel" && totalPagar <= 0)
+		$credito:CreditoAutomovel(tipoJuros == "Variavel" && totalPagar <= 0)
 	then
 		float jurosPagar = $credito.getMontanteEscolhido()*($credito.getTAN()/100);
 		$credito.setTotalPagar($credito.getMontanteEscolhido()+jurosPagar);
@@ -248,7 +258,7 @@ rule "Calcula Mensalidades"
 	salience 90
 	when
 		$reprovado:Reprovado(getNumberMotivos() == 0)
-		$credito:CreditoPessoal(mensalidade <= 0)
+		$credito:CreditoAutomovel(mensalidade <= 0)
 	then
 		float mensalidade = $credito.getTotalPagar()/$credito.getPrazoAmortizacao();
 		$credito.setMensalidade(mensalidade);

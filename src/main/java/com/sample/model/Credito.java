@@ -11,6 +11,17 @@ public class Credito {
 	private float spread;
 	private float euribor;
 	private float TAN;
+	private float taxaEsforco;
+	private float taxaFixa;
+	private boolean checkTaxaEsforco;
+	public float getTaxaFixa() {
+		return taxaFixa;
+	}
+
+	public void setTaxaFixa(float taxaFixa) {
+		this.taxaFixa = taxaFixa;
+	}
+
 	public Credito(Cliente cliente, float montanteEscolhido,
 			int prazoAmortizacao, String tipoJuros, float mensalidade,
 			float totalPagar, float spread, float euribor, float tAN) {
@@ -89,20 +100,20 @@ public class Credito {
 	public void setTAN(float tAN) {
 		TAN = tAN;
 	}
-	public float getTaxaEsforcoCliente() {
-		float mensalidade = (this.montanteEscolhido/this.prazoAmortizacao)+this.cliente.getTotalDespesasCreditos();
-		System.out.println("mesalidade "+mensalidade);
-		System.out.println("ordenado "+this.cliente.getOrdenado());
-		System.out.println("taxa de esforco "+(mensalidade*100)/this.cliente.getOrdenado());
-		return (this.cliente.getOrdenado()*100) / mensalidade;
+	public float getTaxaEsforco() {
+		return taxaEsforco;
 	}
-	public float getTaxaEsforcoFiadorCliente() {
-		float mensalidade = (this.montanteEscolhido/this.prazoAmortizacao)+this.cliente.getTotalDespesasCreditos()+this.fiador.getTotalDespesasCreditos();
-		System.out.println("mesalidade "+mensalidade);
-		float ordenado = this.cliente.getOrdenado()+this.fiador.getOrdenado();
-		System.out.println("ordenado "+ordenado);
-		System.out.println("taxa de esforco "+(mensalidade*100)/ordenado);
-		return (ordenado*100)/mensalidade;
+
+	public void setTaxaEsforco(float taxaEsforco) {
+		this.taxaEsforco = taxaEsforco;
+	}
+
+	public boolean isCheckTaxaEsforco() {
+		return checkTaxaEsforco;
+	}
+
+	public void setCheckTaxaEsforco(boolean checkTaxaEsforco) {
+		this.checkTaxaEsforco = checkTaxaEsforco;
 	}
 	
 }

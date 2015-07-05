@@ -3,54 +3,255 @@ package com.sample
 import com.sample.Simulador;
 import com.sample.model.*;
 import java.util.Scanner;
-
+import java.math.*;
 rule "Cliente com histórico de divida"
 	salience 100
 	when
-		$credito:Credito(cliente.isHistoricoIncumprimento() == true)
+		$reprovado:Reprovado(checkDivida == false)
+		$cliente:Cliente(isHistoricoIncumprimento() == true)
 	then
-		System.out.println("Crédito reprovado - Histórico de incumprimento");
+		$reprovado.addMotivo("\nCrédito reprovado - Cliente Histórico de incumprimento");
+		$reprovado.setCheckDivida(true);
+		update($reprovado);
 end 
 rule "Cliente sem idade"
 	salience 100
 	when
-		$credito:Credito(cliente.getIdade()<18 ||cliente.getIdade()>75)
+		$reprovado:Reprovado(checkIdade == false)
+		$cliente:Cliente(getIdade()<18 ||getIdade()>75)
 	then
-		System.out.println("Crédito reprovado - cliente com idade errada");
+		$reprovado.addMotivo("\nCrédito reprovado - cliente com idade errada");
+		$reprovado.setCheckIdade(true);
+		update($reprovado);
 end 
 rule "Cliente Sem Conta Bancária"
 	salience 100
 	when
-		$credito:Credito(cliente.isContaBancaria() == false)
+		$reprovado:Reprovado(checkContaBancaria == false)
+		$cliente:Cliente(isContaBancaria() == false)
 	then
-		System.out.println("Crédito reprovado - cliente sem conta bancária");
+		$reprovado.addMotivo("\nCrédito reprovado - cliente sem conta bancária");
+		$reprovado.setCheckContaBancaria(true);
+		update($reprovado);
 end 
 rule "Cliente sem emprego estável"
 	salience 100
 	when
-		$credito:Credito(cliente.isEmprego() == false)
+		$reprovado:Reprovado(checkEmprego == false)
+		$cliente:Cliente(isEmprego() == false)
 	then
-		System.out.println("Crédito reprovado - cliente sem emprego estável");
+		$reprovado.addMotivo("\nCrédito reprovado - cliente sem emprego estável");
+		$reprovado.setCheckEmprego(true);
+		update($reprovado);
 end
-rule "Cliente com taxa de esforço elevada"
+rule "Fiador com histórico de divida"
 	salience 99
 	when
-		$simulador:Simulador()
-		$credito:Credito(fiador == null && getTaxaEsforcoCliente() > 35)
+		exists Fiador()
+		$fiador:Fiador(isHistoricoIncumprimento() == true)
+		$reprovado:Reprovado(checkDividaFiador == false)
 	then
-		Scanner sc = new Scanner(System.in);
-		System.out.println("Crédito reprovado - taxa de esforço muito elevada");
-		System.out.println("Pretende usar um fiador?(S/N)");
-		String op = sc.nextLine();
-		if (op.equalsIgnoreCase("S")) {
-			$credito.setFiador($simulador.getInformacaoCliente("###########Informação Fiador"));
-			update($credito);
-		}	
-end
-rule "Taxa de esforço cliente e fiador elevada"
-	salience 100
+		$reprovado.addMotivo("\nCrédito reprovado -Fiador Histórico de incumprimento");
+		$reprovado.setCheckDividaFiador(true);
+		update($reprovado);
+end 
+rule "Fiador sem idade"
+	salience 99
 	when
-		$credito:Credito(fiador != null && getTaxaEsforcoFiadorCliente() > 35)
+		exists Fiador()
+		$reprovado:Reprovado(checkIdadeFiador == false)
+		$fiador:Fiador(getIdade()<18 ||getIdade()>75)
 	then
-		System.out.println("Crédito reprovado -> Taxa de esfprço fiador+cliente muito elevado");
+		$reprovado.addMotivo("\nCrédito reprovado - Fiador com idade errada");
+		$reprovado.setCheckIdadeFiador(true);
+		update($reprovado);
+end 
+rule "Fiador Sem Conta Bancária"
+	salience 99
+	when
+		exists Fiador()
+		$reprovado:Reprovado(checkContaBancariaFiador == false)
+		$fiador:Fiador(isContaBancaria() == false)
+	then
+		$reprovado.addMotivo("\nCrédito reprovado - Fiador sem conta bancária");
+		$reprovado.setCheckContaBancariaFiador(true);
+		update($reprovado);
+end 
+rule "Fiador sem emprego estável"
+	salience 99
+	when
+		exists Fiador()
+		$reprovado:Reprovado(checkEmpregoFiador == false)
+		$fiador:Fiador(isEmprego() == false)
+	then
+		$reprovado.addMotivo("\nCrédito reprovado - Fiador sem emprego estável");
+		$reprovado.setCheckEmpregoFiador(true);
+		update($reprovado);
+end
+rule "Calcula taxa de esforco sem fiador"
+	salience 98
+	when
+		not Fiador()
+		$credito:Credito(checkTaxaEsforco == false)
+		$cliente:Cliente()
+	then
+		float mensalidade = ($credito.getMontanteEscolhido()/$credito.getPrazoAmortizacao())+$cliente.getTotalDespesasCreditos();
+		$credito.setTaxaEsforco((mensalidade*100) / $cliente.getOrdenado());
+		$credito.setCheckTaxaEsforco(true);
+		update($credito);
+end
+rule "Calcula taxa de esforco com fiador"
+	salience 98
+	when
+		exists Fiador()
+		$fiador:Fiador()
+		$credito:Credito(checkTaxaEsforco == false)
+		$cliente:Cliente()
+	then
+		float mensalidade = ($credito.getMontanteEscolhido()/$credito.getPrazoAmortizacao())+$cliente.getTotalDespesasCreditos()+$fiador.getTotalDespesasCreditos();
+		float ordenado = $cliente.getOrdenado()+$fiador.getOrdenado();
+		$credito.setTaxaEsforco((mensalidade*100)/ordenado);
+		$credito.setCheckTaxaEsforco(true);
+		update($credito);
+end
+
+rule "Verifica taxa de esforco"
+	salience 97
+	when
+		$reprovado:Reprovado(checkTaxaEsforco == false)
+		$credito:Credito(taxaEsforco > 35)  
+	then
+		$reprovado.addMotivo("\nCrédito negado -> Taxa de esforço "+$credito.getTaxaEsforco());
+		$reprovado.setCheckTaxaEsforco(true);
+		update($reprovado);
+end
+
+rule "Verifica Reprovado"
+	salience 96
+	when
+		$reprovado:Reprovado(getNumberMotivos() > 0)
+	then
+		System.out.println(""+$reprovado);
+end
+
+
+rule "Verifica Produto Financeiro Pessoal"
+	salience 94
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:CreditoPessoal(produtofinanceiro == true && produtofinanceiroValor >= 0)
+	then
+		$credito.setProdutofinanceiroValor(-0.25f);
+		update($credito);
+end
+rule "Verifica Seguro Credito Pessoal"
+	salience 94
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:CreditoPessoal(seguroCredito == true && seguroCreditoValor >= 0)
+	then
+		$credito.setSeguroCreditoValor(-0.15f);
+		update($credito);
+end
+rule "Verifica Seguro Vida Pessoal"
+	salience 94
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:CreditoPessoal(seguroVida == true && seguroVidaValor >= 0)
+	then
+		$credito.setSeguroVidaValor(-0.15f);
+		update($credito);
+end
+rule "Calcula Crédito Fixo Pessoal"
+	salience 93
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:CreditoPessoal(tipoJuros == "Fixo" && taxaFixa <= 0.0)
+	then
+		float minhaTaxa = 7.5f+($credito.getTaxaEsforco()*0.072f);
+		BigDecimal bd = new BigDecimal(Float.toString(minhaTaxa));
+        bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+        minhaTaxa = bd.floatValue();
+         System.out.println("Taxa sem seguros -> "+minhaTaxa);
+        minhaTaxa += $credito.getSeguroVidaValor()+$credito.getProdutofinanceiroValor()+$credito.getSeguroCreditoValor();
+        $credito.setTaxaFixa(minhaTaxa);
+        System.out.println("Taxa fixa -> "+$credito.getTaxaFixa());
+        update($credito)
+end
+rule "Calcula Crédito Variavel Pessoal"
+	salience 93
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:CreditoPessoal(tipoJuros == "Variavel" && TAN <= 0)
+	then
+		float minhaTaxa = 2.0f+($credito.getTaxaEsforco()*0.0575f);
+		BigDecimal bd = new BigDecimal(Float.toString(minhaTaxa));
+        bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+        System.out.println("Spread Nomral ->"+bd.floatValue());
+        $credito.setEuribor(0.049f);
+        $credito.setSpread(bd.floatValue()+$credito.getSeguroVidaValor()+$credito.getSeguroCreditoValor()+$credito.getProdutofinanceiroValor());
+        System.out.println("Spread com seguros ->"+$credito.getSpread());
+        $credito.setTAN($credito.getSpread()+$credito.getEuribor());
+        System.out.println("TAN -> "+$credito.getTAN());
+        update($credito);
+end
+rule "Verificar limites credito fixa"
+	salience 92
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:CreditoPessoal(tipoJuros == "Fixo" && (taxaFixa < 7.5f || taxaFixa > 9.0f))
+	then
+		if($credito.getTaxaFixa() < 7.5f) {
+			$credito.setTaxaFixa(7.5f);
+		} else {
+			$credito.setTaxaFixa(9.0f);
+		}
+		update($credito);
+end
+rule "Verificar limites credito variavel"
+	salience 92
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:CreditoPessoal(tipoJuros == "Variavel" && (TAN < 2.049f || TAN > 4.049f))
+	then
+		if($credito.getTAN() < 2.049f) {
+			$credito.setTAN(2.049f);
+		} else {
+			$credito.setTAN(4.049f);
+		}
+		System.out.println("Crédito ajustado aos limites -> "+$credito.getTAN());
+		update($credito);
+end
+rule "Calcula Total a Pagar Taxa Fixa"
+	salience 91
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:CreditoPessoal(tipoJuros == "Fixo" && totalPagar <= 0)
+	then
+		float jurosPagar = $credito.getMontanteEscolhido()*($credito.getTaxaFixa()/100);
+		$credito.setTotalPagar($credito.getMontanteEscolhido()+jurosPagar);
+		System.out.println("Total a pagar "+$credito.getTotalPagar());
+		update($credito);
+end
+rule "Calcula Total a Pagar Taxa Variavel"
+	salience 91
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:CreditoPessoal(tipoJuros == "Variavel" && totalPagar <= 0)
+	then
+		float jurosPagar = $credito.getMontanteEscolhido()*($credito.getTAN()/100);
+		$credito.setTotalPagar($credito.getMontanteEscolhido()+jurosPagar);
+		System.out.println("Total a pagar "+$credito.getTotalPagar());
+		update($credito);
+end
+rule "Calcula Mensalidades"
+	salience 90
+	when
+		$reprovado:Reprovado(getNumberMotivos() == 0)
+		$credito:CreditoPessoal(mensalidade <= 0)
+	then
+		float mensalidade = $credito.getTotalPagar()/$credito.getPrazoAmortizacao();
+		$credito.setMensalidade(mensalidade);
+		System.out.println("Mensalidade -> "+mensalidade);
+		update($credito);
 end
