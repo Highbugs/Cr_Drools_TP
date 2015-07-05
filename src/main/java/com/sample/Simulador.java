@@ -69,12 +69,42 @@ public class Simulador {
 			break;
 		case 4:
 			Estudante estudante = getInformacaoEstudante();
+			Fiador fiadorEstudante = new Fiador();
+			System.out.println("Tem fiador?(S/N)");
+			 String fiadorOpEst = sc.nextLine(); 
+			 if(fiadorOpEst.equalsIgnoreCase("S")) {
+				 fiadorEstudante = getInformacaoFiador();
+			 } else {
+				 fiadorEstudante = null;
+			 }
+			CreditoEstudante creditoEstudante = getCreditoEstudante();
+			creditoEstudante.setEstudante(estudante);
+			startTestsEstudante(creditoEstudante, new Simulador(), fiadorEstudante);
 			break;
 		default:
 			System.out.println("Opção errada");
 			break;
 		}
 	 }
+	 private static void startTestsEstudante(CreditoEstudante credito, Simulador simulador, Fiador fiador) {
+		 try {
+	           // load up the knowledge base
+	           KnowledgeBase kbase = readKnowledgeBaseEstudante();
+	           StatefulKnowledgeSession ksession = kbase.newStatefulKnowledgeSession();
+	           KnowledgeRuntimeLogger logger = KnowledgeRuntimeLoggerFactory.newFileLogger(ksession, "test");
+	           // go !
+	           ksession.insert(credito);
+	           ksession.insert(credito.getEstudante());
+	           ksession.insert(new Reprovado());
+	           if(fiador != null) {
+	               ksession.insert(fiador);
+	           }
+	           ksession.fireAllRules();
+	           logger.close();
+	       } catch (Throwable t) {
+	           t.printStackTrace();
+	       }
+		 }
 	 private static void startTestsAutomovel(Credito credito, Simulador simulador, Fiador fiador) {
 		 try {
 	           // load up the knowledge base
@@ -132,6 +162,20 @@ public class Simulador {
            t.printStackTrace();
        }
 	 }
+	 private static KnowledgeBase readKnowledgeBaseEstudante() throws Exception {
+	       KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
+	       kbuilder.add(ResourceFactory.newClassPathResource("Regras_Estudante.drl"), ResourceType.DRL);
+	       KnowledgeBuilderErrors errors = kbuilder.getErrors();
+	       if (errors.size() > 0) {
+	           for (KnowledgeBuilderError error: errors) {
+	               System.err.println(error);
+	           }
+	           throw new IllegalArgumentException("Could not parse knowledge.");
+	       }
+	       KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
+	       kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+	       return kbase;
+	   }
 	 private static KnowledgeBase readKnowledgeBaseHabitacao() throws Exception {
 	       KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
 	       kbuilder.add(ResourceFactory.newClassPathResource("Regras_habitacao.drl"), ResourceType.DRL);
@@ -174,7 +218,26 @@ public class Simulador {
        kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
        return kbase;
    }
-	 public static CreditoHabitacao getCreditoHabitacao(Cliente cliente) {
+ 	 public static CreditoEstudante getCreditoEstudante() {
+		 Scanner sc = new Scanner(System.in);
+		 CreditoEstudante credito = new CreditoEstudante(null, 0,0,"Variavel",0,0,0,0,0,false);
+		 System.out.println("########### Dados Crédito Estudante ####################");
+		 System.out.println("Montante escolhido");
+		 credito.setMontanteEscolhido(sc.nextFloat());
+		 System.out.println("Prazo Amortização(meses)");
+		 credito.setPrazoAmortizacao(sc.nextInt());
+		 System.out.println("Investir Produto Finaceiro (S/N)");
+		 String produto = sc.next();
+		 if(produto.equalsIgnoreCase("S")) {
+			 credito.setProdutofinanceiro(true);
+		 } else {
+			 credito.setProdutofinanceiro(false);
+		 }
+		 System.out.println("##############################################"); 
+		 return credito;
+		 
+	 }
+ 	 public static CreditoHabitacao getCreditoHabitacao(Cliente cliente) {
 		 Scanner sc = new Scanner(System.in);
 		 CreditoHabitacao credito = new CreditoHabitacao(null,0,0,null,0,0,0,0,0,false,false,false);
 		 System.out.println("########### Dados Crédito ####################");
@@ -343,9 +406,9 @@ public class Simulador {
 		 System.out.println("Encontra-se matriculado na universidade ? (S/N)");
 		 String matriculaUniversidade = sc.nextLine(); 
 		 if(creditosIguais.equalsIgnoreCase("S")) {
-			 x.setMatriculadoUniversidade(true);
-		 } else {
 			 x.setMatriculadoUniversidade(false);
+		 } else {
+			 x.setMatriculadoUniversidade(true);
 		 }
 		 System.out.println("Tem histórico de incumprimento ?(S/N)");
 		 String historicoIncumprimento = sc.nextLine(); 
@@ -354,13 +417,19 @@ public class Simulador {
 		 } else {
 			 x.setHistoricoIncumprimento(false);
 		 }
-		 System.out.println("Tem fiador ? (S/N)");
-		 String fiador = sc.nextLine();
-		 System.out.println("##########################################################");
-		 if(fiador.equalsIgnoreCase("S")) {
-			 x.setFiador(getInformacaoCliente("############################# Dados Fiador #################"));
+		 System.out.println("Tem nacionalidade Portuguesa ?(S/N)");
+		 String nacionalidade = sc.nextLine(); 
+		 if(nacionalidade.equalsIgnoreCase("S")) {
+			 x.setNacionalidadePortuguesa(true);
 		 } else {
-			 x.setFiador(null);
+			 x.setNacionalidadePortuguesa(false);
+		 }
+		 System.out.println("Tem Conta Bancária ?(S/N)");
+		 String conta = sc.nextLine(); 
+		 if(conta.equalsIgnoreCase("S")) {
+			 x.setContaBancaria(true);
+		 } else {
+			 x.setContaBancaria(false);
 		 }
 		 return x;
 	 }

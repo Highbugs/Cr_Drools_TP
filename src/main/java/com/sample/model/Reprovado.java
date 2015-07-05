@@ -17,7 +17,43 @@ public class Reprovado {
 	private boolean checkSeguroVida;
 	private boolean checkValorHabitacao;
 	private boolean checkTempoAmortizacao;
+	private boolean checkMatricula;
+	private boolean checkFiador;
+	private boolean checkCreditosIguais;
+	private boolean checkNacionalidade;
 	
+	public boolean isCheckNacionalidade() {
+		return checkNacionalidade;
+	}
+
+	public void setCheckNacionalidade(boolean checkNacionalidade) {
+		this.checkNacionalidade = checkNacionalidade;
+	}
+
+	public boolean isCheckCreditosIguais() {
+		return checkCreditosIguais;
+	}
+
+	public void setCheckCreditosIguais(boolean checkCreditosIguais) {
+		this.checkCreditosIguais = checkCreditosIguais;
+	}
+
+	public boolean isCheckFiador() {
+		return checkFiador;
+	}
+
+	public void setCheckFiador(boolean checkFiador) {
+		this.checkFiador = checkFiador;
+	}
+
+	public boolean isCheckMatricula() {
+		return checkMatricula;
+	}
+
+	public void setCheckMatricula(boolean checkMatricula) {
+		this.checkMatricula = checkMatricula;
+	}
+
 	public boolean isCheckTempoAmortizacao() {
 		return checkTempoAmortizacao;
 	}

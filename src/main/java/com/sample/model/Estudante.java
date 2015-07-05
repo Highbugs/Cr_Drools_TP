@@ -5,6 +5,7 @@ public class Estudante extends Pessoa {
 	private float mediaCurso;
 	private boolean creditosIguais;
 	private boolean matriculadoUniversidade;
+	private boolean nacionalidadePortuguesa;
 	private Cliente fiador; 
 
 	public Estudante(String nome, int idade, boolean historicoIncumprimento,
@@ -16,7 +17,13 @@ public class Estudante extends Pessoa {
 		this.creditosIguais = creditosIguais;
 		this.matriculadoUniversidade = matriculadoUniversidade;
 	}
-	
+	public boolean isNacionalidadePortuguesa() {
+		return nacionalidadePortuguesa;
+	}
+
+	public void setNacionalidadePortuguesa(boolean nacionalidadePortuguesa) {
+		this.nacionalidadePortuguesa = nacionalidadePortuguesa;
+	}
 	public Cliente getFiador() {
 		return fiador;
 	}
